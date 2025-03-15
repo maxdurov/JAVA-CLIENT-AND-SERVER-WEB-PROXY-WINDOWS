@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+import java.util.Arrays;
 
 public class ServerProxyHandler {
 
@@ -35,6 +36,8 @@ public class ServerProxyHandler {
 
                 String[] header = resp.split("\r\n");
 
+                //PROTOCOL.debugOutPut(Arrays.toString(header));
+
                 if (header[0].startsWith("CONNECT")) {
 
                     PROTOCOL.debugOutPut("DETECT CONNECT");
@@ -47,15 +50,15 @@ public class ServerProxyHandler {
                     } else {
                         clientSocket.close();
                     }
-                } else if (header[0].startsWith("GET")) {
-                    PROTOCOL.debugOutPut("DETECT GET");
-                    System.out.println(resp);
-                    String[] addr = (header[1].split(" ")[1]).replace(" ", "").split(":");
+                } else if (header[1].toUpperCase().startsWith("HOST")) {
+                    PROTOCOL.debugOutPut("DETECT");
+                    System.out.println(header[0]);
+                    String[] addr = header[1].split(":");
                     InetSocketAddress address;
-                    if (addr.length < 2) {
-                        address = new InetSocketAddress(addr[0], 80);
+                    if (addr.length < 3) {
+                        address = new InetSocketAddress(addr[1].replace(" ", ""), 80);
                     } else {
-                        address = new InetSocketAddress(addr[0], Integer.parseInt(addr[1]));
+                        address = new InetSocketAddress(addr[1].replace(" ", ""), Integer.parseInt(addr[2]));
                     }
 
                     if (connectToSite(address)) {
@@ -63,7 +66,7 @@ public class ServerProxyHandler {
                         connectToSiteTunnel();
                     }
                 } else {
-                    System.out.println("ERR METHOD: " + header[0]);
+                    System.out.println("ERR METHOD: " + Arrays.toString(header));
                 }
 
                 clientSocket.close();
